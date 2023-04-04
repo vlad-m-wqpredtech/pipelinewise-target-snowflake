@@ -275,6 +275,7 @@ class DbSync:
                                                                               self.grantees)
 
             self.data_flattening_max_level = self.connection_config.get('data_flattening_max_level', 0)
+            # TODO: flatten_schema returns sorted column names in the original version
             self.flatten_schema = flattening.flatten_schema(stream_schema_message['schema'],
                                                             max_level=self.data_flattening_max_level)
 

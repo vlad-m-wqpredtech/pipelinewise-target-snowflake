@@ -130,7 +130,25 @@ def persist_lines(config, lines, table_cache=None, file_format_type: FileFormatT
 
         t = o['type']
 
-        if t == 'RECORD':
+        if t == 'BATCH':
+            if 'stream' not in o:
+                raise Exception(f"Line is missing required key 'stream': {line}")
+            if o['stream'] not in schemas:
+                raise Exception(
+                    f"A record for stream {o['stream']} was encountered before a corresponding schema")
+
+            # Get schema for this record's stream
+            stream = o['stream']
+            db_sync: DbSync = stream_to_sync[stream]
+            list_of_files = o['manifest']
+
+            for s3_file_path in list_of_files:
+                key = s3_file_path.replace("s3://", "", 1)
+                key = key.split("/", 1)[1] 
+                db_sync.load_file(key, -1, -1)
+                # TODO: need to write state 
+
+        elif t == 'RECORD':
             if 'stream' not in o:
                 raise Exception(f"Line is missing required key 'stream': {line}")
             if o['stream'] not in schemas:
@@ -227,7 +245,8 @@ def persist_lines(config, lines, table_cache=None, file_format_type: FileFormatT
                 raise Exception(f"Line is missing required key 'stream': {line}")
 
             stream = o['stream']
-            new_schema = stream_utils.float_to_decimal(o['schema'])
+            new_schema = stream_utils.normalize_columns(o['schema'])
+            new_schema = stream_utils.float_to_decimal(new_schema)
 
             # Update and flush only if the the schema is new or different than
             # the previously used version of the schema

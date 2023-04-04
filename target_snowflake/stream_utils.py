@@ -128,3 +128,36 @@ def get_incremental_key(singer_msg: Dict):
             return col
 
     return None
+
+
+def normalize_columns(schema: Dict) -> Dict:
+    if 'properties' in schema:
+        properties = schema['properties']
+        normalized_properties = {}
+
+        for column_name, column_info in properties.items():
+            normalized_column_name = _normalize_column(column_name)
+            normalized_properties[normalized_column_name] = column_info
+
+        schema['properties'] = normalized_properties
+    return schema
+
+def _normalize_column(column_name: str) -> str:
+    column_replacement = {
+        " ": "_",
+        "+": "_",
+        "(":"_",
+        ")": "",
+        "%": "PER",
+        "*": "",
+        ".": "",
+        "-": "_",
+        "__": "_",
+        "$": "DOLLARS",
+        "&": "AND",
+        "/": ""
+    }
+    column_name = column_name.strip().strip('"')
+    for cond, replacement in column_replacement.items():
+        column_name = column_name.replace(cond, replacement)
+    return column_name.lower()

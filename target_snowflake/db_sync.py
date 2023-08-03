@@ -808,7 +808,12 @@ class DbSync:
         else:
             found_tables = [table for table in (self.get_tables([self.schema_name.upper()]))
                             if f'"{table["TABLE_NAME"].upper()}"' == table_name]
-
+        
+        if len(found_tables) == 0 and len(self.flatten_schema) == 0:
+            # schema is empty, return without creating any table
+            self.logger.info('Singer-IO schema is empty. No tables will be created. Skipping...')
+            return
+        
         if len(found_tables) == 0:
             query = self.create_table_query()
             self.logger.info('Table %s does not exist. Creating...', table_name_with_schema)

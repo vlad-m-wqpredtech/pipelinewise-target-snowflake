@@ -59,12 +59,10 @@ def flatten_schema(d, parent_key=None, sep='__', level=0, max_level=0):
                 items.append((new_key, list(v.values())[0][0]))
 
     key_func = lambda item: item[0]
-    #sorted_items = sorted(items, key=key_func)
     for k, g in itertools.groupby(items, key=key_func):
         if len(list(g)) > 1:
             raise ValueError(f'Duplicate column name produced in schema: {k}')
-    from collections import OrderedDict
-    return OrderedDict(items)
+    return collections.OrderedDict(items)
 
 
 def _should_json_dump_value(key, value, schema=None):
